@@ -1,0 +1,11 @@
+#!/bin/bash
+IMAGE="f2hex/armhf-ubuntu_core:jan16"
+VOL_HOSTDIR=`pwd`  
+VOL_MOUNTPOINT="/root/sd"
+mkdir -p $VOL_HOSTDIR
+docker run -i -v $VOL_HOSTDIR:$VOL_MOUNTPOINT $IMAGE /root/sd/build-motion
+
+# build the Docker image
+cd motion-docker-imgtree
+docker build -t f2hex/armhf-motion .
+

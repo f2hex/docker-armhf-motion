@@ -1,0 +1,126 @@
+#!/bin/bash
+IMG_BASENAME="motion"
+MOTION_GIT="https://github.com/Mr-Dave/motion.git"
+FFMPEG_GIT="https://github.com/FFmpeg/FFmpeg.git"
+LIBX264_GIT="git://git.videolan.org/x264.git"
+BASE_DIR=/root/sd
+BUILD_DIR=$BASE_DIR/build
+TARGET_TREE=$BUILD_DIR/$IMG_BASENAME-docker-imgtree
+MAINTAINER='franco.fiorese@gmail.com'
+
+#
+# upgrade image and install required packages for development
+#
+upgrade_image() {
+  echo "deb http://ports.ubuntu.com/ trusty main restricted universe multiverse" >> /etc/apt/sources.list
+  apt-get update && apt-get -y upgrade
+  apt-get -y install \
+    zile \
+    less \
+    git \
+    autoconf \
+    automake \
+    pkgconf \
+    libtool \
+    libjpeg8-dev \
+    build-essential \
+    libzip-dev \
+    tree \
+    python \
+    python-jinja2
+}
+
+#
+# update system configuration
+#
+update_sysconf() {
+   groupadd --gid 2016 survusr
+   useradd --gid 2016 --uid 2016 survusr --create-home --shell /bin/bash
+}
+
+#
+# build x264
+#
+build_x264() {
+  cd $BUILD_DIR
+  git clone $LIBX264_GIT
+  cd x264
+  ./configure \
+    --prefix=/usr \
+    --enable-static \
+    --enable-shared
+  make
+  #install libx264
+  make install
+  ldconfig
+}
+
+#
+# build ffmpeg
+#
+build_ffmpeg() {
+  cd $BUILD_DIR
+  git clone $FFMPEG_GIT
+  cd FFmpeg
+  export CFLAGS="-march=native -mfloat-abi=hard -mfpu=neon -ftree-vectorize -mvectorize-with-neon-quad -ffast-math -mcpu=cortex-a9 -mtune=cortex-a9 -mthumb -O2 -pipe -fstack-protector --param=ssp-buffer-size=4 -D_FORTIFY_SOURCE=2"
+  export PKG_CONFIG_PATH="/usr/lib/pkgconfig"
+
+  ./configure \
+    --prefix=/usr \
+    --libdir=/usr/lib \
+    --enable-nonfree \
+    --enable-thumb \
+    --enable-neon \
+    --enable-avresample \
+    --enable-gpl \
+    --enable-libx264 \
+    --enable-nonfree
+  make -j5
+  # perform the installation of just programs, the libraries, the pkg-config and the headers
+  make install-libs install-progs install-headers
+  ldconfig
+}
+
+#
+# build ffmpeg
+#
+build_motion() {
+  cd $BUILD_DIR
+  git clone $MOTION_GIT
+  cd motion
+  autoreconf -fiv
+  export CFLAGS="-march=native -mfloat-abi=hard -mfpu=neon -ftree-vectorize -mvectorize-with-neon-quad -ffast-math -mcpu=cortex-a9 -mtune=cortex-a9 -mthumb -O2 -pipe -fstack-protector --param=ssp-buffer-size=4 -D_FORTIFY_SOURCE=2"
+  ./configure \
+    --prefix=/usr \
+    --sysconfdir=/etc
+  make -j5
+  make install
+}
+
+#
+# generate the tree to be used by the Docker image build process and the Dockerfile
+#
+generate_Dockerfile() {
+  mkdir -p $TARGET_TREE
+  cd $BASE_DIR/dockerize
+  python main.py \
+    --verbose \
+    --no-build \
+    --output-dir $TARGET_TREE \
+    /usr/bin/motion /usr/bin/ffmpeg /usr/bin/ffprobe /usr/bin/ffserver
+  # remove debug info from all the executable files
+  cd $TARGET_TREE
+  # strip out debug info from executable and libraries
+  find . -type f -perm /u+x | xargs strip
+  # finally generate a tree (ASCII) representation of the image
+  tree -p > image-tree.txt
+
+}
+
+upgrade_image
+update_sysconf
+build_x264
+build_ffmpeg
+build_motion
+generate_Dockerfile
+

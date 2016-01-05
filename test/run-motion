@@ -1,0 +1,10 @@
+#!/bin/bash
+VOL_CONFIG="/mnt/survpad/media/test/config:/etc/motion"
+VOL_MEDIA="/mnt/survpad/media/test/out:/media/video"
+docker run \
+  -i \
+  -v $VOL_MEDIA \
+  -v $VOL_CONFIG \
+  -p 7899:7899 \
+  f2hex/armhf-motion:latest \
+  /usr/bin/motion -c /etc/motion/motion.conf

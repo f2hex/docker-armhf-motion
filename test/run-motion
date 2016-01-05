@@ -7,4 +7,4 @@ docker run \
   -v $VOL_CONFIG \
   -p 7899:7899 \
   f2hex/armhf-motion:latest \
-  /usr/bin/motion -c /etc/motion/motion.conf
+  /usr/bin/motion -n -c /etc/motion/motion.conf

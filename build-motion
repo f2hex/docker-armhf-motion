@@ -9,7 +9,8 @@ TARGET_TREE=$BUILD_DIR/$IMG_BASENAME-docker-imgtree
 MAINTAINER='franco.fiorese@gmail.com'
 
 #
-# upgrade image and install required packages for development
+# upgrade image and install required packages for building up software
+# components
 #
 upgrade_image() {
   echo "deb http://ports.ubuntu.com/ trusty main restricted universe multiverse" >> /etc/apt/sources.list
@@ -39,7 +40,7 @@ update_sysconf() {
 }
 
 #
-# build x264
+# fetch and build x264
 #
 build_x264() {
   cd $BUILD_DIR
@@ -56,7 +57,7 @@ build_x264() {
 }
 
 #
-# build ffmpeg
+# fetch and build ffmpeg
 #
 build_ffmpeg() {
   cd $BUILD_DIR
@@ -82,7 +83,7 @@ build_ffmpeg() {
 }
 
 #
-# build ffmpeg
+# fetch and build motion
 #
 build_motion() {
   cd $BUILD_DIR

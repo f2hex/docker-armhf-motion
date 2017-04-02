@@ -8,7 +8,7 @@ The following packages are built from sources:
 * [motion](http://www.lavrsen.dk/foswiki/bin/view/Motion/WebHome) - sources are taken from [here](https://github.com/Mr-Dave/motion.git)
 
 Moreover the [dockerize tool](https://github.com/larsks/dockerize) it is used to build up the root file system of the resulting image.
-The final result is an Docker image containing the file system represented by this tree:
+The final result is a Docker image containing the file system represented by this tree:
 ```
 .
 |-- [-rw-r--r--]  Dockerfile
